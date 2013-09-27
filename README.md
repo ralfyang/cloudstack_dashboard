@@ -5,6 +5,9 @@ CloudStack_Dashboard_on_CLi
 
    * API Port enable first on Global setting of CloudStack - "Global Setting > integration.api.port > Value=8096(or whatever)"
 
+   * nmap package requires for the ping test
+     * yum install nmap -y
+
    * Setup the Config file as your cloudstack system
      * vi cloudstack_dashboard.conf
 

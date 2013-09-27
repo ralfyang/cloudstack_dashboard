@@ -9,6 +9,9 @@ CloudStack_Dashboard_on_CLi
    * Execute the file in the same directory with config file
      * cloudstack_dashboard
 
+   * Log file
+     *  /data/logs/cloud_dashboard/cloud_work.log 
+
    * Sample Screen
 <pre>
 ===================================================================================================================================================

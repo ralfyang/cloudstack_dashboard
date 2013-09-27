@@ -52,6 +52,7 @@ CloudStack_Dashboard_on_CLi
 | VM Create                    |  [c]  |
 | VM Delete                    |  [d]  |
 | VM Recovery                  |  [r]  |
+| SSH Terminal                 |  [t]  |
 | eXit                         |  [x]  |
 ========================================
  You can type the command with the host number(ex. s2 -> start VM for No. 2 server) 

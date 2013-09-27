@@ -133,6 +133,7 @@ printf "$SubFormat" "| VM Stop" "|  [e]" "|"
 printf "$SubFormat" "| VM Create" "|  [c]" "|"
 printf "$SubFormat" "| VM Delete" "|  [d]" "|"
 printf "$SubFormat" "| VM Recovery" "|  [r]" "|"
+printf "$SubFormat" "| SSH Terminal " "|  [t]" "|"
 printf "$SubFormat" "| eXit " "|  [x]" "|"
 printf "%$SubWidth.${SubWidth}s\n" "$divider"
 printf " You can type the command with the host number(ex. s2 -> start VM for No. 2 server) \n" 
@@ -197,7 +198,7 @@ CommandX=`echo "$CommandX"| sed -e 's/[0-9]//g'`
 				rm -f $InfoVM $IPLists $Matching
 				exit 0;
 				;;
-			d|r|s|e)
+			d|r|s|e|t)
 					## If selection for input already
 					if [[ $RmHost = "" ]]
 					then
@@ -211,6 +212,7 @@ CommandX=`echo "$CommandX"| sed -e 's/[0-9]//g'`
 						read wait_command
 					else
 						RMID=`cat $Matching |egrep " $RmHost " | awk -F "=" '{print $2}'`
+						HostIP=`cat $InfoVM |grep " $RmHost " | awk '{print $(NF-2)}' | sed -e 's/://g'`
 						TargetHost=`cat $InfoVM |egrep " $RmHost " | awk '{print $4}'`
 							if [[ $TargetHost != "" ]]
 							then
@@ -223,6 +225,8 @@ CommandX=`echo "$CommandX"| sed -e 's/[0-9]//g'`
 										CommandM="Start" ;;
 									e)
 										CommandM="Stop" ;;
+									t)
+										CommandM="SSH" ;;
 									esac
 								echo ""
 								echo " [$CommandM] Target host is [ $TargetHost ]. Are sure $CommandM ? [y/n]"
@@ -249,6 +253,11 @@ CommandX=`echo "$CommandX"| sed -e 's/[0-9]//g'`
 											echo "`date +%Y.%m.%d_%T`:: Stop command" >> $WorkLog
 											echo "$BasedCommand=stopVirtualMachine&id=$RMID -> " 1>> $WorkLog
 											curl "$BasedCommand=stopVirtualMachine&id=$RMID" 1>> $WorkLog 2> /dev/null
+											echo "" >> $WorkLog ;;
+										t)
+											echo "`date +%Y.%m.%d_%T`:: SSH command" >> $WorkLog
+											echo "Try to connect to $RMID -> " 1>> $WorkLog
+											ssh $HostIP
 											echo "" >> $WorkLog ;;
 										esac
 									else

@@ -3,7 +3,9 @@ cloudstack_dashboard
 
 CloudStack_Dashboard_on_CLi
 
-   * Config first for your cloudstack system
+   * API Port enable first on Global setting of CloudStack - "Global Setting > integration.api.port > Value=8096(or whatever)"
+
+   * Setup the Config file as your cloudstack system
      * vi cloudstack_dashboard.conf
 
    * Execute the file in the same directory with config file

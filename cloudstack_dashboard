@@ -4,10 +4,9 @@
 #
 source cloudstack_dashboard.conf
 
-## Disk add offering type
-#diskOfferingId=3
 
 CloudURL="http://$URL:$Ports/"
+C_User=`whoami`
 
 ## API basic command
 OptionValue="response=json&&zoneId=$zoneId&domainid=$domainid&account=$account"
@@ -17,7 +16,8 @@ BasedCommand="$CloudURL?$OptionValue&command"
 ##### Screen Start
 echo " Wating....... "
 
-LogDir="/data/logs/cloud_dashboard"
+#LogDir="/data/logs/cloud_dashboard"
+LogDir="/home/`whoami`"
 WorkLog="$LogDir/cloud_work.log"
 LogChecker=`ls $WorkLog 2> /dev/null`
 	if [[ $LogChecker = "" ]]
@@ -37,6 +37,8 @@ do
 
 ## List-up the VM
 ListCommand=`curl "$BasedCommand=listVirtualMachines" 2> /dev/null | sed -e 's/ {\"id\"/\n\n {"id"/g' -e 's/{ "count":/\n/g' -e 's/ ,"virtualmachine" :/\n"virtualmachine" :/g' -e 's/ \] } }//g'`
+
+
 Total=`echo "$ListCommand" | awk 'NR==2 {print}'`
 	if [[ $Total = "" ]]
 	then
@@ -52,25 +54,25 @@ InfoVM="$LogDir/InfoVM.txt"
 ## Value for printf
 Count=1
 gep=1
-width=147
+width=168
 divider="================================="
-divider=$divider$divider$divider$divider$divider
-Format="%-4s %-14s %-15s %-11s %-30s %-17s %-7s %-6s %-12s %-20s %-1s\n"
+divider=$divider$divider$divider$divider$divider$divider
+Format="%-4s %-14s %-15s %-11s %-30s %-17s %-7s %-6s %-12s %-20s %-20s %-1s\n"
 
 ## Make a Header of the list-up file
 printf "" > $IPLists
 printf "" > $Matching
 printf "%$width.${width}s\n" "$divider"  > $InfoVM
-printf "$Format" "| No" "|  Hostname" "|  Created" "|  State" "|  Template name" "|  Spec." "| Use%" "| Mem" "| Instance" "|  IP address" "|" >> $InfoVM
+printf "$Format" "| No" "|  Hostname" "|  Created" "|  State" "|  Template name" "|  Spec." "| Use%" "| Mem" "| Instance" "| Memo" "|  IP address" "|" >> $InfoVM
 printf "%$width.${width}s\n" "$divider"  >> $InfoVM
 
 
 
 ### Array Define for the result patch
 ## Key value
-PatchedVar=(VMID Hostname Created State Servicename Cpuused Templatename Ipaddress Memory Instance)
+PatchedVar=(VMID Hostname Created State Servicename Cpuused Templatename Ipaddress Memory Instance Memo)
 ## Keyword for patch
-PatchTarget=(" {id" "^name" "^created" "^state" "^serviceofferingname" "^cpuused" "^templatename" "^ipaddress" "^memory" "^instancename")
+PatchTarget=(" {id" "^name" "^created" "^state" "^serviceofferingname" "^cpuused" "^templatename" "^ipaddress" "^memory" "^instancename" "^value")
 
 	## Parsing for listup
 	while [ $Count -le $Total ]
@@ -90,7 +92,7 @@ PatchTarget=(" {id" "^name" "^created" "^state" "^serviceofferingname" "^cpuused
 
 		echo "$Ipaddress" >> $IPLists
 
-		printf "$Format" "| $Count" "| $Hostname" "| $Created" "| $State" "| $Templatename" "| $Servicename" "| $Cpuused"  "| $Memory" "| $Instance" "| $Ipaddress: OFF" "|" >> $InfoVM
+		printf "$Format" "| $Count" "| $Hostname" "| $Created" "| $State" "| $Templatename" "| $Servicename" "| $Cpuused"  "| $Memory" "| $Instance" "| $Memo" "| $Ipaddress: OFF" "|" >> $InfoVM
 
 		echo " $Count $Hostname=$VMID" >> $Matching
 
@@ -127,6 +129,8 @@ SubFormat="%-30s %-7s %-1s\n"
 printf "%$SubWidth.${SubWidth}s\n" "$divider"
 printf "$SubFormat" "| Description" "|  Key" "|"
 printf "%$SubWidth.${SubWidth}s\n" "$divider"
+printf "$SubFormat" "| Change User - $C_User" "|  [u]" "|"
+printf "%$SubWidth.${SubWidth}s\n" "--------------------------------------------"
 printf "$SubFormat" "| Refresh the list" "| Enter" "|"
 printf "$SubFormat" "| VM Start" "|  [s]" "|"
 printf "$SubFormat" "| VM Stop" "|  [e]" "|"
@@ -134,7 +138,9 @@ printf "$SubFormat" "| VM Create" "|  [c]" "|"
 printf "$SubFormat" "| VM Delete" "|  [d]" "|"
 printf "$SubFormat" "| VM Recovery" "|  [r]" "|"
 printf "$SubFormat" "| SSH Terminal " "|  [t]" "|"
-printf "$SubFormat" "| eXit " "|  [x]" "|"
+printf "$SubFormat" "| Memo Add / Remove " "|  [m]" "|"
+printf "$SubFormat" "| Install default package " "|  [i]" "|"
+printf "$SubFormat" "| Quit " "|  [q]" "|"
 printf "%$SubWidth.${SubWidth}s\n" "$divider"
 printf " You can type the command with the host number(ex. s2 -> start VM for No. 2 server) \n" 
 printf " :: Please insert a key for what you want ? \n"
@@ -186,19 +192,23 @@ CommandX=`echo "$CommandX"| sed -e 's/[0-9]//g'`
 						NewHost=$account$AddTotal
       				fi
 				
-
-
-
 				echo "`date +%Y.%m.%d_%T`:: Create command" >> $WorkLog
 				echo "$BasedCommand=deployVirtualMachine&serviceOfferingId=$serviceOfferingId&templateId=$templateId&name=$NewHost&displayname=$NewHost -> " 1>> $WorkLog
 				curl "$BasedCommand=deployVirtualMachine&serviceOfferingId=$serviceOfferingId&templateId=$templateId&name=$NewHost&displayname=$NewHost" 1>> $WorkLog 2> /dev/null
 				echo "" >> $WorkLog 
 				;;
-			x)
+			x|q)
 				rm -f $InfoVM $IPLists $Matching
-				exit 0;
-				;;
-			d|r|s|e|t)
+				exit 0;;
+			u)
+				if [[ $C_User = "root" ]]
+				then
+					C_User=`whoami`
+				else
+					C_User="root"
+				fi;;
+
+			d|r|s|e|t|i|m)
 					## If selection for input already
 					if [[ $RmHost = "" ]]
 					then
@@ -227,9 +237,13 @@ CommandX=`echo "$CommandX"| sed -e 's/[0-9]//g'`
 										CommandM="Stop" ;;
 									t)
 										CommandM="SSH" ;;
+									i)
+										CommandM="Install the package" ;;
+									m)
+										CommandM="Modify Memo" ;;
 									esac
 								echo ""
-								echo " [$CommandM] Target host is [ $TargetHost ]. Are sure $CommandM ? [y/n]"
+								echo " [$CommandM] Target host is [ $TargetHost ]. Are you sure want to $CommandM ? [y/n]"
 								read Decide
 									if [[ $Decide = y ]]
 									then
@@ -257,7 +271,28 @@ CommandX=`echo "$CommandX"| sed -e 's/[0-9]//g'`
 										t)
 											echo "`date +%Y.%m.%d_%T`:: SSH command" >> $WorkLog
 											echo "Try to connect to $RMID -> " 1>> $WorkLog
-											ssh $HostIP
+											ssh $C_User@$HostIP
+											echo "" >> $WorkLog ;;
+										i)
+											echo "`date +%Y.%m.%d_%T`:: Install command" >> $WorkLog
+											echo "Try to connect to $RMID -> " 1>> $WorkLog
+											sudo zinst i server_default_setting gsshop_account_policy gsshop_authorize_client -stable -h $HostIP
+											echo "" >> $WorkLog ;;
+										m)
+											echo " Please insert a Memo "
+											read Memo_val
+											Memo_val_check=`echo "$Memo_val" | grep " "`
+												if [[ $Memo_val_check != "" ]]; then
+													Memo_val=`echo "$Memo_val" | sed -e 's/ /+/g'`
+												fi
+
+												if [[ $Memo = "" ]]; then
+													curl "$BasedCommand=createTags&tags%5B0%5D.key=Memo&tags%5B0%5D.value=$Memo_val&resourceIds=$RMID&resourceType=UserVm" 1>> $WorkLog 2> /dev/null
+												else
+													curl "$BasedCommand=deleteTags&tags%5B0%5D.key=Memo&tags&resourceIds=$RMID&resourceType=UserVm" 1>> $WorkLog 2> /dev/null
+													curl "$BasedCommand=createTags&tags%5B0%5D.key=Memo&tags%5B0%5D.value=$Memo_val&resourceIds=$RMID&resourceType=UserVm" 1>> $WorkLog 2> /dev/null
+												fi
+
 											echo "" >> $WorkLog ;;
 										esac
 									else

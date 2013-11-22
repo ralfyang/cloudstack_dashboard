@@ -18,6 +18,7 @@ CloudStack_Dashboard_on_CLi
      *  /data/logs/cloud_dashboard/cloud_work.log 
 
    * Sample Screen
+
 <pre>
 ========================================================================================================================================================================
 | No |  Hostname    |  Created      |  State    |  Template name               |  Spec.          | Use%  | Mem  | Instance   | Memo               |  IP address        |

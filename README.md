@@ -47,3 +47,7 @@ CloudStack_Dashboard_on_CLi
  :: Please insert a key for what you want ?
 
 </pre>
+
+
+[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/goody80/cloudstack_dashboard/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
+
